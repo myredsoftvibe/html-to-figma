@@ -8,23 +8,11 @@
   "networkAccess": {
     "allowedDomains": [
       "https://figma.com",
-      "https://*.amplitude.com",
-      "https://builder.io",
-      "https://*.builder.io",
-      "https://www.googletagmanager.com",
-      "https://*.openai.com",
-      "https://ai-to-figma-tk43uighdq-uc.a.run.app",
-      "https://imgur.com"
+      "https://*.builder.io"
     ],
     "devAllowedDomains": [
       "https://figma.com",
-      "https://*.amplitude.com",
-      "https://builder.io",
       "https://*.builder.io",
-      "https://www.googletagmanager.com",
-      "https://*.openai.com",
-      "https://ai-to-figma-tk43uighdq-uc.a.run.app",
-      "https://imgur.com",
       "http://localhost:4000"
     ]
   }

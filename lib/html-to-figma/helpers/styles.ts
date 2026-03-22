@@ -354,12 +354,12 @@ export const getShadowEffects = ({
   computedStyle: { boxShadow },
 }: {
   computedStyle: CSSStyleDeclaration;
-}): ShadowEffect[] | undefined => {
+}): DropShadowEffect [] | undefined => {
   if (boxShadow && boxShadow !== "none") {
     const parsed = parseBoxShadowStr(boxShadow);
     const color = getRgb(parsed.color);
     if (color) {
-      const shadowEffect: ShadowEffect = {
+      const shadowEffect: DropShadowEffect  = {
         color,
         type: "DROP_SHADOW",
         radius: parsed.blurRadius,

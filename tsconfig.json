@@ -5,7 +5,7 @@
     "target": "es6",
     "lib": ["es2016", "dom"],
     "jsx": "react",
-    "strict": true,
+    "strict": false,
     "declaration": true,
     "experimentalDecorators": true,
     "typeRoots": ["node_modules/@types", "node_modules/@figma"],

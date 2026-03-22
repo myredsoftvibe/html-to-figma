@@ -893,7 +893,7 @@ class App extends SafeComponent {
             height: "100%",
           }}
         >
-          <Tabs
+          {/* <Tabs
             variant="fullWidth"
             style={{
               minHeight: 40,
@@ -923,16 +923,16 @@ class App extends SafeComponent {
                     textTransform: "none",
                   }}
                 >
-                  Import from web
+                  Html to Figma
                 </span>
               }
             />
-          </Tabs>
-          <Divider style={{ width: settings.ui.baseWidth }} />
+          </Tabs> */}
+          {/* <Divider style={{ width: settings.ui.baseWidth }} /> */}
 
 
           {/* Import to Figma */}
-          <TabPanel value={this.tabIndex} index={0}>
+          {/* <TabPanel value={this.tabIndex} index={0}> */}
             <div
               style={{
                 display: "flex",
@@ -1015,12 +1015,12 @@ class App extends SafeComponent {
                   </div>
                 ) : (
                   <>
-                    <Divider
+                    {/* <Divider
                       style={{
                         margin: "0 -5",
                         maxWidth: settings.ui.baseWidth,
                       }}
-                    />
+                    /> */}
                     <div
                       style={{
                         padding: 15,
@@ -1192,9 +1192,10 @@ class App extends SafeComponent {
                 )}
               </form>
             </div>
-          </TabPanel>
+          {/* </TabPanel> */}
 
-          <div
+          {/*  FOOTER*/}
+          {/* <div
             style={{
               display: "flex",
               flexDirection: "column",
@@ -1204,7 +1205,7 @@ class App extends SafeComponent {
               marginTop: "auto",
             }}
           >
-            <Divider />
+            <Divider /> */}
 
             {useDev && (
               <div
@@ -1229,49 +1230,9 @@ class App extends SafeComponent {
                 </a>
               </div>
             )}
-            <a
-              style={{ display: "flex" }}
-              href="https://www.builder.io?utm_source=figma"
-              target="_blank"
-            >
-              <img
-                width={170}
-                height={56}
-                style={{
-                  margin: "20px auto 10px",
-                }}
-                src="https://cdn.builder.io/api/v1/image/assets%2FYJIGb4i01jvw0SRdL5Bt%2F2dee283279f244c1a731330a3aa96166"
-              />
-            </a>
-            <p
-              style={{
-                fontSize: 12,
-                textAlign: "center",
-                margin: "5px auto 10px",
-                maxWidth: 240,
-              }}
-            >
-              <a
-                style={{
-                  color: themeVars.colors.primary,
-                  cursor: "pointer",
-                  textDecoration: "none",
-                }}
-                href="https://www.builder.io?utm_source=figma"
-                target="_blank"
-              >
-                Builder.io{" "}
-              </a>{" "}
-              <span style={{ opacity: 0.9 }}>
-                is a headless CMS that lets you drag & drop with your
-                <span onClick={() => this.handleDevModeClick()}>
-                  &nbsp;components
-                </span>
-                .
-              </span>
-            </p>
 
-            <div
+          {/*  SUPPORT FOOTER*/}
+            {/* <div
               style={{
                 textAlign: "center",
                 display: "flex",
@@ -1321,8 +1282,10 @@ class App extends SafeComponent {
               >
                 <FormattedMessage id="help" defaultMessage="Help" />
               </a>
-            </div>
-          </div>
+            </div> */}
+
+            
+          {/* </div> */}
         </div>
       </IntlProvider>
     );

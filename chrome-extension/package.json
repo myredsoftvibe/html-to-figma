@@ -5,6 +5,7 @@
   "scripts": {
     "build": "webpack --config webpack.prod.js",
     "dev": "webpack --config webpack.dev.js --watch",
+    "devW": "set NODE_OPTIONS=--openssl-legacy-provider&& webpack --config webpack.dev.js --watch",
     "watch": "webpack -w --config webpack.dev.js",
     "lint": "tslint 'src/**/*.{ts, tsx}'"
   },

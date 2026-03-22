@@ -713,14 +713,15 @@ class App extends SafeComponent {
                 }}
               >
                 Using dev env. If you see this and you are not a developer,
-                please{" "}
-                <a
+                please report it
+                {/* {" "} */}
+                {/* <a
                   style={{ color: "inherit" }}
                   href="https://github.com/BuilderIO/html-to-figma/issues"
                   target="_blank"
                 >
                   report it
-                </a>
+                </a> */}
               </div>
             )}
 

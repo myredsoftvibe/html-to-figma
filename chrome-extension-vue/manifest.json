@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "HTML to Figma",
+  "version": "1.0.0",
+  "description": "Capture any page and import it into Figma",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "dist/popup/index.html",
+    "default_icon": {
+      "16": "assets/logo.png",
+      "48": "assets/logo.png",
+      "128": "assets/logo.png"
+    }
+  }
+}

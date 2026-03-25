@@ -1,24 +1,22 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { crx } from '@crxjs/vite-plugin'
-import manifest from './manifest.json'
+import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [
-    vue(),
-    crx({ manifest }),
-  ],
+  plugins: [vue()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        popup: 'src/popup/index.html',
-        background: 'src/background.ts',
-        inject: 'src/inject.ts',
+        popup: resolve(__dirname, 'src/popup/index.html'),
+        background: resolve(__dirname, 'src/background.ts'),
+        inject: resolve(__dirname, 'src/inject.ts'),
       },
       output: {
         entryFileNames: '[name].js',
+        chunkFileNames: 'chunks/[name].js',
+        assetFileNames: 'assets/[name].[ext]',
       },
     },
   },

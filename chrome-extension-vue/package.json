@@ -1,0 +1,22 @@
+{
+  "name": "html-to-figma-vue-extension",
+  "version": "1.0.0",
+  "description": "Chrome extension to capture HTML and import to Figma — Vue 3 + TypeScript",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "2.0.0-beta.23",
+    "@figma/plugin-typings": "1.93.0",
+    "@types/chrome": "0.0.268",
+    "@vitejs/plugin-vue": "5.0.4",
+    "typescript": "5.4.5",
+    "vite": "5.2.11",
+    "vue-tsc": "2.0.16"
+  },
+  "dependencies": {
+    "vue": "3.4.27"
+  }
+}

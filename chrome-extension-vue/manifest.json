@@ -10,7 +10,7 @@
     "type": "module"
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "src/popup/index.html",
     "default_icon": {
       "16": "assets/logo.png",
       "48": "assets/logo.png",

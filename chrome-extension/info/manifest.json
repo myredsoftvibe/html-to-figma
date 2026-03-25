@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "HTML to Figma - by Builder.io",
+  "name": "HTML to Figma",
   "description": "Import a web page to Figma layers",
   "version": "0.0.7",
 

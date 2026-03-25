@@ -55,7 +55,7 @@ export default class Popup extends React.Component<AppProps, AppState> {
         }}
       >
         <style>{`body { margin: 0 }`}</style>
-        <img
+        {/* <img
           style={{
             height: 61,
             width: 250,
@@ -65,7 +65,17 @@ export default class Popup extends React.Component<AppProps, AppState> {
             objectPosition: 'center'
           }}
           src={logo}
-        />
+        /> */}
+        <div style={{
+            height: 61,
+            width: 250,
+            margin: "auto",
+            marginBottom: 30,
+            objectFit: "contain",
+            objectPosition: 'center'
+          }}>
+          🔴🟠🟣🟢🔵
+        </div>
         {this.error ? (
           <div
             style={{
@@ -79,7 +89,8 @@ export default class Popup extends React.Component<AppProps, AppState> {
           >
             {this.error}
           </div>
-        ) : this.done ? (
+        ) 
+        :this.done ? (
           <Paper style={{ textAlign: "center", padding: 20 }}>
             <div style={{ display: "flex", justifyContent: "center" }}>
               <CheckCircle style={{ color: theme.colors.primary }} />
@@ -100,7 +111,8 @@ export default class Popup extends React.Component<AppProps, AppState> {
                 Figma plugin
               </a>{" "}
               and choose "upload here" to upload the downloaded figma.json file
-              to your current Figma document.{" "}
+              to your current Figma document.
+              {/* {" "}
               <a
                 href="https://github.com/BuilderIO/html-to-figma/blob/master/chrome-extension/README.md"
                 target="_blank"
@@ -110,17 +122,19 @@ export default class Popup extends React.Component<AppProps, AppState> {
                 }}
               >
                 More info
-              </a>
+              </a> */}
             </Typography>
-            <img
+            {/* <img
               style={{ margin: "10px 0", maxWidth: "100%" }}
               src="https://imgur.com/ARz16KC.gif"
               alt="Chrome extension demo"
-            />
+            /> */}
           </Paper>
-        ) : this.loading ? (
+        )
+        : this.loading ? (
           <CircularProgress style={{ margin: "20px auto" }} />
-        ) : (
+        )
+        : (
           <Button
             fullWidth
             size="large"
@@ -132,7 +146,7 @@ export default class Popup extends React.Component<AppProps, AppState> {
           </Button>
         )}
 
-        <div style={{ marginTop: 30, textAlign: "center", color: "#666" }}>
+        {/* <div style={{ marginTop: 30, textAlign: "center", color: "#666" }}>
           Made with{" "}
           <Heart
             style={{
@@ -149,9 +163,9 @@ export default class Popup extends React.Component<AppProps, AppState> {
           >
             Builder.io
           </a>
-        </div>
+        </div> */}
 
-        <div
+        {/* <div
           style={{
             marginTop: 25,
             textAlign: "center",
@@ -218,7 +232,7 @@ export default class Popup extends React.Component<AppProps, AppState> {
           >
             Help
           </a>
-        </div>
+        </div> */}
       </div>
     );
   }

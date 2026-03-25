@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             target: { tabId: activeTab.id },
             files: ["js/inject.js"]
           },
-          args => {
+          (args: chrome.scripting.InjectionResult[]) => {
             sendResponse({ done: true, args});
           }
         );

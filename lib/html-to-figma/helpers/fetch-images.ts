@@ -1,14 +1,18 @@
 import { ImagePaintWithUrl, fetchImageBytes } from "./image";
 import { LayerNode } from "../types/nodes";
 
+// Access chrome via globalThis so this file compiles in non-extension
+// contexts (plugin, browser bundle) where @types/chrome is not available.
+const chromeRuntime: typeof chrome | undefined = (globalThis as any).chrome;
+
 /**
  * Fetch a single URL via the Chrome extension background service worker.
  * The background script is not subject to CORS, so it can retrieve
  * cross-origin images that a content script cannot.
  *
  * Falls back to a direct fetch() for data: URIs (SVG/base64) because
- * those don't need the background detour and chrome.runtime may not be
- * available in all execution contexts.
+ * those don't need the background detour and the chrome runtime may not
+ * be available in all execution contexts.
  */
 async function fetchImageBytesViaBg(
   url: string
@@ -19,19 +23,19 @@ async function fetchImageBytesViaBg(
   }
 
   // If we're not inside a chrome extension content script, fall back
-  if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
+  if (!chromeRuntime?.runtime?.sendMessage) {
     return fetchImageBytes(url);
   }
 
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage(
+    chromeRuntime.runtime.sendMessage(
       { type: "fetchImage", url },
-      (response) => {
-        if (chrome.runtime.lastError || !response || response.error) {
+      (response: any) => {
+        if (chromeRuntime.runtime.lastError || !response || response.error) {
           console.warn(
             "[html-to-figma] background fetch failed for",
             url,
-            response?.error ?? chrome.runtime.lastError
+            response?.error ?? chromeRuntime.runtime.lastError
           );
           resolve(undefined);
           return;

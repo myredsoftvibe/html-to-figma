@@ -1,28 +1,18 @@
 import { ImagePaintWithUrl, fetchImageBytes } from "./image";
 import { LayerNode } from "../types/nodes";
 
-// Access chrome via globalThis so this file compiles in non-extension
-// contexts (plugin, browser bundle) where @types/chrome is not available.
-const chromeRuntime: typeof chrome | undefined = (globalThis as any).chrome;
+// Access chrome runtime via globalThis typed as any so this file compiles
+// in non-extension contexts (plugin, browser bundle) where @types/chrome
+// is not available. At runtime this is undefined outside a chrome extension.
+const chromeRuntime: any = (globalThis as any).chrome;
 
-/**
- * Fetch a single URL via the Chrome extension background service worker.
- * The background script is not subject to CORS, so it can retrieve
- * cross-origin images that a content script cannot.
- *
- * Falls back to a direct fetch() for data: URIs (SVG/base64) because
- * those don't need the background detour and the chrome runtime may not
- * be available in all execution contexts.
- */
 async function fetchImageBytesViaBg(
   url: string
 ): Promise<Uint8Array | undefined> {
-  // data: URIs are local — fetch them directly, no CORS issue
   if (url.startsWith("data:")) {
     return fetchImageBytes(url);
   }
 
-  // If we're not inside a chrome extension content script, fall back
   if (!chromeRuntime?.runtime?.sendMessage) {
     return fetchImageBytes(url);
   }
@@ -46,14 +36,6 @@ async function fetchImageBytesViaBg(
   });
 }
 
-/**
- * Recursively walks the layer tree, finds every ImagePaint fill with a
- * pending url, fetches the bytes via the background script (CORS-free),
- * and attaches them as imageData: Uint8Array.
- *
- * If a fetch fails the url field is removed from the fill so the plugin
- * receives a clean ImagePaint without unrecognised keys.
- */
 export async function fetchImagesInLayers(
   layers: (LayerNode | FrameNode)[]
 ): Promise<void> {
@@ -93,7 +75,6 @@ export async function fetchImagesInLayers(
     if (bytes) {
       (fill as any).imageData = bytes;
     } else {
-      // fetch failed — remove url so Figma validation doesn't throw on unknown keys
       delete (fill as any).url;
     }
   }

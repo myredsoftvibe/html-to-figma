@@ -3,6 +3,24 @@ import { isHidden } from "./nodes";
 import { fastClone } from "./object";
 import { parseUnits, getRgb } from "./parsers";
 
+/**
+ * Returns true when a text node lives alongside other nodes (elements or
+ * non-empty text) inside its parent — i.e. "mixed content" like:
+ *   <li><strong>Bold</strong> rest of text</li>
+ * In that case building a separate TEXT layer per fragment causes overlaps
+ * in Figma, so we skip such nodes entirely.
+ */
+function hasSiblings(node: Node): boolean {
+  const parent = node.parentElement;
+  if (!parent) return false;
+  for (const child of Array.from(parent.childNodes)) {
+    if (child === node) continue;
+    if (child.nodeType === Node.ELEMENT_NODE) return true;
+    if (child.nodeType === Node.TEXT_NODE && child.textContent?.trim()) return true;
+  }
+  return false;
+}
+
 export const buildTextNode = ({
   node,
 }: {
@@ -20,12 +38,11 @@ export const buildTextNode = ({
       return undefined;
     }
 
-    // If the parent contains child *elements* (not just text nodes), this
-    // text node is part of mixed content like <li><strong>x</strong> y</li>.
-    // Each fragment would get its own overlapping rect in Figma, so we skip
-    // them here. The parent's RECTANGLE layer from generateElements covers
-    // the visual area already.
-    if (parent.children.length > 0) {
+    // Skip text fragments that are part of mixed content (e.g.
+    // <li><strong>x</strong> y</li>). Each fragment would get its own
+    // overlapping TEXT layer. The visual area is already covered by the
+    // parent RECTANGLE from generateElements.
+    if (hasSiblings(node)) {
       return undefined;
     }
 

@@ -19,6 +19,16 @@ export const buildTextNode = ({
     if (isHidden(parent)) {
       return undefined;
     }
+
+    // If the parent contains child *elements* (not just text nodes), this
+    // text node is part of mixed content like <li><strong>x</strong> y</li>.
+    // Each fragment would get its own overlapping rect in Figma, so we skip
+    // them here. The parent's RECTANGLE layer from generateElements covers
+    // the visual area already.
+    if (parent.children.length > 0) {
+      return undefined;
+    }
+
     const computedStyles = getComputedStyle(parent);
     const range = document.createRange();
     range.selectNode(node);
@@ -27,8 +37,7 @@ export const buildTextNode = ({
     range.detach();
 
     // getBoundingClientRect() returns viewport-relative coords.
-    // Add scroll offset so text node positions match rectangle nodes
-    // which are also viewport-relative — keeping everything consistent.
+    // Add scroll offset so text node positions are page-relative.
     rect.top += window.scrollY;
     rect.left += window.scrollX;
 
@@ -99,7 +108,6 @@ export const buildTextNode = ({
       textNode.fontSize = Math.round(fontSize.value);
     }
     if (computedStyles.fontFamily) {
-      // const font = computedStyles.fontFamily.split(/\s*,\s*/);
       (textNode as any).fontFamily = computedStyles.fontFamily;
     }
 

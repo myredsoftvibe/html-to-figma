@@ -1,5 +1,6 @@
 import { getBoundingClientRect } from "./helpers/dimensions";
 import { getImagePaintWithUrl } from "./helpers/image";
+import { fetchImagesInLayers } from "./helpers/fetch-images";
 import { isHidden, textNodesUnder, traverse } from "./helpers/nodes";
 import { size } from "./helpers/object";
 import { getRgb } from "./helpers/parsers";
@@ -53,7 +54,7 @@ const getLayersForElement = (el: Element) => {
     elementLayers.push(createSvgLayer(el));
     return elementLayers;
   }
-  // Sub SVG Eleemnt
+  // Sub SVG Element
   else if (el instanceof SVGElement) {
     return [];
   }
@@ -68,9 +69,7 @@ const getLayersForElement = (el: Element) => {
     return [];
   }
 
-  // TO-DO: what does `appliedStyles` do here? All we do is check that it's non-empty
   const appliedStyles = getAppliedComputedStyles(el);
-
   const computedStyle = getComputedStyle(el);
 
   if (
@@ -129,6 +128,7 @@ const getLayersForElement = (el: Element) => {
           }
         }
       }
+
       const imagePaint = getImagePaintWithUrl({ computedStyle, el });
 
       if (imagePaint) {
@@ -152,7 +152,12 @@ const getLayersForElement = (el: Element) => {
   return elementLayers;
 };
 
-export function htmlToFigma(
+/**
+ * Synchronously collects all Figma layers from the DOM.
+ * Image fills will contain `url` fields but NO `imageData` yet.
+ * Use `htmlToFigma` (async) to get layers with embedded image bytes.
+ */
+export function htmlToFigmaSync(
   selector: HTMLElement | string = "body",
   useFrames = false,
   time = false
@@ -186,7 +191,6 @@ export function htmlToFigma(
     }
   }
 
-  // TODO: send frame: { children: []}
   const root: WithRef<FrameNode> = {
     type: "FRAME",
     width: Math.round(window.innerWidth),
@@ -210,4 +214,30 @@ export function htmlToFigma(
   }
 
   return framesLayers;
+}
+
+/**
+ * Async version of `htmlToFigmaSync`.
+ * After collecting all layers it fetches every image URL and embeds
+ * the raw bytes as `imageData: Uint8Array` on each ImagePaint fill.
+ *
+ * On the Figma plugin side, consume it like this:
+ * ```ts
+ * for (const fill of node.fills) {
+ *   if (fill.type === 'IMAGE' && fill.imageData) {
+ *     fill.imageHash = figma.createImage(new Uint8Array(fill.imageData)).hash;
+ *     delete fill.imageData;
+ *     delete fill.url;
+ *   }
+ * }
+ * ```
+ */
+export async function htmlToFigma(
+  selector: HTMLElement | string = "body",
+  useFrames = false,
+  time = false
+) {
+  const layers = htmlToFigmaSync(selector, useFrames, time);
+  await fetchImagesInLayers(layers);
+  return layers;
 }

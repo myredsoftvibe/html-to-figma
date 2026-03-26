@@ -1,5 +1,18 @@
-interface ImagePaintWithUrl extends ImagePaint {
+/**
+ * `ImagePaintWithUrl` is an intermediate type used during DOM parsing.
+ * The `url` field holds the raw image URL collected from the element.
+ * It is NOT part of the final Figma JSON — after parsing the caller must
+ * resolve the URL to actual bytes via `fetchImagesInLayers` so the plugin
+ * can call `figma.createImage(imageData)` and get a real `imageHash`.
+ */
+export interface ImagePaintWithUrl extends ImagePaint {
+  /** Raw URL collected from the DOM element. Resolved to `imageData` later. */
   url: string;
+  /**
+   * Resolved image bytes. Populated by `fetchImagesInLayers`.
+   * The Figma plugin receives this and calls `figma.createImage(imageData)`.
+   */
+  imageData?: Uint8Array;
 }
 
 export const getImagePaintWithUrl = ({
@@ -16,43 +29,29 @@ export const getImagePaintWithUrl = ({
     return {
       url,
       type: "IMAGE",
-      // TODO: object fit, position
       scaleMode: "FILL",
       imageHash: null,
     };
   } else {
     const baseImagePaint: ImagePaint = {
       type: "IMAGE",
-      // TODO: object fit, position
       scaleMode: computedStyle.objectFit === "contain" ? "FIT" : "FILL",
       imageHash: null,
     };
 
     if (el instanceof HTMLImageElement) {
-      // we use `currentSrc` instead of `src` as that will be the accurate value in dynamic contexts:
-      // when the img is a child of a picture element, or it has `sizes`/`srcSet` attributes, etc.
       const url = el.currentSrc;
       if (url) {
-        return {
-          url,
-          ...baseImagePaint,
-        };
+        return { url, ...baseImagePaint };
       }
     } else if (el instanceof HTMLVideoElement) {
       const url = el.poster;
       if (url) {
-        return {
-          url,
-          ...baseImagePaint,
-        };
+        return { url, ...baseImagePaint };
       }
     }
   }
 
-  // can this be true _and_ one of the previous IFs?
-  // i.e. could an element have a computed bg image and be an SVG/img/picture/video element?
-  // probably not, we can likely avoid returning this fill _and_ the previous ones.
-  // TO-DO: what happens if this is in the fills array, along with something else e.g. an img?
   if (
     computedStyle.backgroundImage &&
     computedStyle.backgroundImage !== "none"
@@ -65,7 +64,6 @@ export const getImagePaintWithUrl = ({
       return {
         url,
         type: "IMAGE",
-        // TODO: background size, position
         scaleMode: computedStyle.backgroundSize === "contain" ? "FIT" : "FILL",
         imageHash: null,
       };
@@ -74,3 +72,20 @@ export const getImagePaintWithUrl = ({
 
   return undefined;
 };
+
+/**
+ * Fetches a single image URL and returns its raw bytes as Uint8Array.
+ * Returns `undefined` if the fetch fails (network error, CORS, etc.).
+ */
+export async function fetchImageBytes(
+  url: string
+): Promise<Uint8Array | undefined> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return undefined;
+    const buffer = await response.arrayBuffer();
+    return new Uint8Array(buffer);
+  } catch {
+    return undefined;
+  }
+}

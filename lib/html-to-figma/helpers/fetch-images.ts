@@ -6,29 +6,13 @@ import { LayerNode } from "../types/nodes";
  * still has a pending `url` (i.e. not yet resolved), fetches the image
  * bytes in parallel, and attaches them as `imageData: Uint8Array`.
  *
- * After this function resolves, every image fill looks like:
- * ```json
- * {
- *   "type": "IMAGE",
- *   "scaleMode": "FILL",
- *   "imageHash": null,
- *   "url": "https://...",       // kept for debugging / fallback
- *   "imageData": [0, 255, ...]   // Uint8Array — pass to figma.createImage()
- * }
- * ```
- *
- * The Figma plugin side should do:
- * ```ts
- * const hash = figma.createImage(new Uint8Array(fill.imageData)).hash;
- * fill.imageHash = hash;
- * delete fill.imageData;
- * delete fill.url;
- * ```
+ * If a fetch fails (CORS, 404, network error) the `url` field is removed
+ * from the fill so the plugin receives a clean ImagePaint without unknown
+ * keys (which would cause Figma validation to throw).
  */
 export async function fetchImagesInLayers(
   layers: (LayerNode | FrameNode)[]
 ): Promise<void> {
-  // Collect all (fill, url) pairs that need resolving
   const pending: Array<{ fill: ImagePaintWithUrl; url: string }> = [];
 
   function collect(layer: any) {
@@ -50,7 +34,6 @@ export async function fetchImagesInLayers(
 
   if (pending.length === 0) return;
 
-  // De-duplicate by URL so we only fetch each unique image once
   const urlToBytes = new Map<string, Uint8Array | undefined>();
   const uniqueUrls = [...new Set(pending.map((p) => p.url))];
 
@@ -61,11 +44,14 @@ export async function fetchImagesInLayers(
     })
   );
 
-  // Attach resolved bytes back to the fill objects (mutates in place)
   for (const { fill, url } of pending) {
     const bytes = urlToBytes.get(url);
     if (bytes) {
       (fill as any).imageData = bytes;
+      // keep url only if we have bytes (plugin will clean it up after createImage)
+    } else {
+      // fetch failed (CORS, 404, etc.) — remove url so Figma validation doesn't throw
+      delete (fill as any).url;
     }
   }
 }

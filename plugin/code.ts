@@ -175,7 +175,7 @@ async function processImages(layer: RectangleNode | TextNode) {
           image.imageHash = figma.createImage(new Uint8Array(bytes)).hash;
           delete image.intArr;
           delete image.imageData;
-          delete image.url; // clean up the source URL kept for debugging
+          delete image.url;
         }
       })
     )
@@ -187,6 +187,21 @@ function getImageFills(layer: RectangleNode | TextNode) {
     Array.isArray(layer.fills) &&
     layer.fills.filter((item) => item.type === "IMAGE");
   return images;
+}
+
+/**
+ * Strips transport-only fields from IMAGE fills before the layer is
+ * assigned to a real Figma node. Figma's API rejects fills that contain
+ * unknown keys such as `url`, `imageData`, or `intArr`.
+ */
+function sanitizeFills(layer: any): any {
+  if (!Array.isArray(layer.fills)) return layer;
+  layer.fills = layer.fills.map((fill: any) => {
+    if (fill.type !== "IMAGE") return fill;
+    const { url, imageData, intArr, ...rest } = fill;
+    return rest;
+  });
+  return layer;
 }
 
 const normalizeName = (str: string) =>
@@ -576,6 +591,8 @@ figma.ui.onmessage = async (msg) => {
                 (layer as RectangleNode).name = "Example Image";
               }
             }
+            // Strip any leftover transport fields before writing fills to Figma
+            sanitizeFills(layer);
             assign(rect, layer);
             rect.resize(layer.width || 1, layer.height || 1);
             rects.push(rect);

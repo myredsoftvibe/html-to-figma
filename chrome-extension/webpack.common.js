@@ -35,13 +35,13 @@ module.exports = {
         test: /\.scss$/,
         use: [
           {
-            loader: "style-loader" // Creates style nodes from JS strings
+            loader: "style-loader"
           },
           {
-            loader: "css-loader" // Translates CSS into CommonJS
+            loader: "css-loader"
           },
           {
-            loader: "sass-loader" // Compiles Sass to CSS
+            loader: "sass-loader"
           }
         ]
       },
@@ -52,6 +52,11 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: [".ts", ".tsx", ".js"]
+    extensions: [".ts", ".tsx", ".js"],
+    alias: {
+      // Point to the local lib so our fetchImagesInLayers changes are picked up
+      // instead of the published npm package.
+      "@builder.io/html-to-figma": path.resolve(__dirname, "../lib/html-to-figma/index.ts")
+    }
   }
 };

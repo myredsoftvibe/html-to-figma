@@ -150,17 +150,26 @@ export async function processImages(layer: Node) {
   type AugmentedImagePaint = Writeable<ImagePaint> & {
     intArr?: Uint8Array;
     url?: string;
+    imageData?: number[] | Uint8Array;
   };
 
   return Promise.all(
     images.map(async (image: AugmentedImagePaint) => {
       try {
-        if (!image || !image.url) {
+        // ── Path 1: bytes already fetched by chrome extension ──────────────
+        // imageData is a plain number[] after JSON serialization (JSON cannot
+        // encode Uint8Array natively). Convert it back to Uint8Array → intArr
+        // which is what plugin/code.ts processImages() consumes.
+        if (image.imageData) {
+          image.intArr = new Uint8Array(image.imageData as number[]);
+          delete image.imageData;
+          delete image.url;
           return;
         }
 
-        const url = image.url;
-        if (url.startsWith("data:")) {
+        // ── Path 2: data: URI (inline SVG or base64 image) ─────────────────
+        if (image.url && image.url.startsWith("data:")) {
+          const url = image.url;
           const type = url.split(/[:,;]/)[1];
           if (type.includes("svg")) {
             const svgValue = decodeURIComponent(url.split(",")[1]);
@@ -176,43 +185,17 @@ export async function processImages(layer: Node) {
             return;
           }
         }
-        // Внешний URL — прокси закомментирован, пропускаем
-        console.info("Skipping external image URL (no proxy):", url);
-        return; // ← добавить это
 
-        // const isSvg = url.endsWith(".svg");
-
-        // // Proxy returned content through Builder so we can access cross origin for
-        // // pulling in photos, etc
-        // const res = await fetch(
-        //   `${apiHost}/api/v1/proxy-api?url=${encodeURIComponent(url)}`
-        // );
-
-        // const contentType = res.headers.get("content-type");
-        // if (isSvg || contentType?.includes("svg")) {
-        //   const text = await res.text();
-        //   convertToSvg(text);
-        // } else {
-        //   const arrayBuffer = await res.arrayBuffer();
-        //   const type = fileType(arrayBuffer);
-        //   if (type && (type.ext.includes("svg") || type.mime.includes("svg"))) {
-        //     convertToSvg(await res.text());
-        //     return;
-        //   } else {
-        //     const intArr = new Uint8Array(arrayBuffer);
-        //     delete image.url;
-
-        //     if (
-        //       type &&
-        //       (type.ext.includes("webp") || type.mime.includes("image/webp"))
-        //     ) {
-        //       const pngArr = await transformWebpToPNG(intArr);
-        //       image.intArr = pngArr;
-        //     } else {
-        //       image.intArr = intArr;
-        //     }
-        //   }
-        // }
+        // ── Path 3: external URL, no bytes available ────────────────────────
+        // The Figma plugin iframe cannot fetch cross-origin images (CORS).
+        // The chrome extension should have pre-fetched and embedded imageData.
+        // If we still have a bare url here it means the fetch failed on the
+        // extension side. Remove url so Figma validation doesn't throw
+        // "Unrecognized key: url".
+        if (image.url) {
+          console.info("Skipping external image URL (no imageData):", image.url);
+          delete image.url;
+        }
       } catch (err) {
         console.warn("Could not fetch image", layer, err);
       }

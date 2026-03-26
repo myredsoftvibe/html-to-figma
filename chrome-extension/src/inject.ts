@@ -1,19 +1,13 @@
-import { htmlToFigma } from "@builder.io/html-to-figma";
+import { htmlToFigmaSync } from "@builder.io/html-to-figma";
 
+// inject.ts runs via executeScript — chrome.runtime is NOT available here.
+// We only collect layers (with url fields) synchronously and return them.
+// The background script will fetch image bytes and embed them before saving.
 (async () => {
-  const layers = await htmlToFigma(
+  const layers = htmlToFigmaSync(
     "body",
     location.hash.includes("useFrames=true")
   );
-
-  const json = JSON.stringify({ layers });
-  const blob = new Blob([json], { type: "application/json" });
-
-  const link = document.createElement("a");
-  link.setAttribute("href", URL.createObjectURL(blob));
-  link.setAttribute("download", "page.figma.json");
-  document.body.appendChild(link);
-
-  link.click();
-  document.body.removeChild(link);
+  // Return layers to background via executeScript result
+  return JSON.stringify({ layers });
 })();

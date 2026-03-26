@@ -3,7 +3,7 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "rootDir": "src",
+    "rootDir": "..",
     "outDir": "dist/js",
     "sourceMap": true,
     "strict": true,
@@ -11,7 +11,11 @@
     "lib": ["es2015", "dom"],
     "experimentalDecorators": true,
     "typeRoots": ["node_modules/@types"],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@builder.io/html-to-figma": ["../lib/html-to-figma/index.ts"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../lib"]
 }

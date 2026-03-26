@@ -2,13 +2,53 @@ import { ImagePaintWithUrl, fetchImageBytes } from "./image";
 import { LayerNode } from "../types/nodes";
 
 /**
- * Recursively walks the layer tree, finds every `ImagePaint` fill that
- * still has a pending `url` (i.e. not yet resolved), fetches the image
- * bytes in parallel, and attaches them as `imageData: Uint8Array`.
+ * Fetch a single URL via the Chrome extension background service worker.
+ * The background script is not subject to CORS, so it can retrieve
+ * cross-origin images that a content script cannot.
  *
- * If a fetch fails (CORS, 404, network error) the `url` field is removed
- * from the fill so the plugin receives a clean ImagePaint without unknown
- * keys (which would cause Figma validation to throw).
+ * Falls back to a direct fetch() for data: URIs (SVG/base64) because
+ * those don't need the background detour and chrome.runtime may not be
+ * available in all execution contexts.
+ */
+async function fetchImageBytesViaBg(
+  url: string
+): Promise<Uint8Array | undefined> {
+  // data: URIs are local — fetch them directly, no CORS issue
+  if (url.startsWith("data:")) {
+    return fetchImageBytes(url);
+  }
+
+  // If we're not inside a chrome extension content script, fall back
+  if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
+    return fetchImageBytes(url);
+  }
+
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(
+      { type: "fetchImage", url },
+      (response) => {
+        if (chrome.runtime.lastError || !response || response.error) {
+          console.warn(
+            "[html-to-figma] background fetch failed for",
+            url,
+            response?.error ?? chrome.runtime.lastError
+          );
+          resolve(undefined);
+          return;
+        }
+        resolve(new Uint8Array(response.bytes));
+      }
+    );
+  });
+}
+
+/**
+ * Recursively walks the layer tree, finds every ImagePaint fill with a
+ * pending url, fetches the bytes via the background script (CORS-free),
+ * and attaches them as imageData: Uint8Array.
+ *
+ * If a fetch fails the url field is removed from the fill so the plugin
+ * receives a clean ImagePaint without unrecognised keys.
  */
 export async function fetchImagesInLayers(
   layers: (LayerNode | FrameNode)[]
@@ -39,7 +79,7 @@ export async function fetchImagesInLayers(
 
   await Promise.all(
     uniqueUrls.map(async (url) => {
-      const bytes = await fetchImageBytes(url);
+      const bytes = await fetchImageBytesViaBg(url);
       urlToBytes.set(url, bytes);
     })
   );
@@ -48,9 +88,8 @@ export async function fetchImagesInLayers(
     const bytes = urlToBytes.get(url);
     if (bytes) {
       (fill as any).imageData = bytes;
-      // keep url only if we have bytes (plugin will clean it up after createImage)
     } else {
-      // fetch failed (CORS, 404, etc.) — remove url so Figma validation doesn't throw
+      // fetch failed — remove url so Figma validation doesn't throw on unknown keys
       delete (fill as any).url;
     }
   }

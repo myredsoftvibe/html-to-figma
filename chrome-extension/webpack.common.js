@@ -26,23 +26,26 @@ module.exports = {
   module: {
     rules: [
       {
-        exclude: /node_modules/,
         test: /\.tsx?$/,
-        use: "ts-loader"
+        use: {
+          loader: "ts-loader",
+          options: {
+            // Force all files (including ../lib/**) to use this tsconfig
+            // so the paths alias for @builder.io/html-to-figma is respected.
+            configFile: path.resolve(__dirname, "tsconfig.json"),
+            // Allow importing files outside rootDir (../lib)
+            transpileOnly: false
+          }
+        },
+        exclude: /node_modules/
       },
       {
         exclude: /node_modules/,
         test: /\.scss$/,
         use: [
-          {
-            loader: "style-loader"
-          },
-          {
-            loader: "css-loader"
-          },
-          {
-            loader: "sass-loader"
-          }
+          { loader: "style-loader" },
+          { loader: "css-loader" },
+          { loader: "sass-loader" }
         ]
       },
       {
@@ -54,8 +57,6 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".tsx", ".js"],
     alias: {
-      // Point to the local lib so our fetchImagesInLayers changes are picked up
-      // instead of the published npm package.
       "@builder.io/html-to-figma": path.resolve(__dirname, "../lib/html-to-figma/index.ts")
     }
   }

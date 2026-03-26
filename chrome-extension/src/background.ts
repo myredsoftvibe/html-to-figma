@@ -4,49 +4,61 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.inject) {
     isResponseAsync = true;
 
-    chrome.tabs.query({ currentWindow: true, active: true }, async (tabs) => {
-      const activeTab = sender.tab || tabs[0];
+    // Do NOT use currentWindow:true — when DevTools is open the service worker
+    // is in a different window context and the query returns empty.
+    chrome.tabs.query({ active: true }, async (tabs) => {
+      // sender.tab is set only when message comes from a content script,
+      // not from popup. Find the first non-chrome tab.
+      const activeTab =
+        sender.tab ??
+        tabs.find((t) => t.url && !t.url.startsWith("chrome"));
+
+      console.log("[bg] activeTab:", activeTab?.id, activeTab?.url);
+
       if (!activeTab?.id) {
+        console.error("[bg] no active tab found");
         sendResponse({ done: false, error: "No active tab" });
         return;
       }
 
       const tabId = activeTab.id;
 
-      // Step 1: inject the html-to-figma lib as a file (no return value needed)
-      // then run a second script as func to collect layers and return JSON.
+      // Step 1: inject inject.js which exposes window.__htmlToFigmaSync
       try {
         await chrome.scripting.executeScript({
           target: { tabId },
           files: ["js/inject.js"],
         });
+        console.log("[bg] inject.js loaded");
       } catch (e) {
+        console.error("[bg] inject.js failed:", e);
         sendResponse({ done: false, error: String(e) });
         return;
       }
 
-      // Step 2: call the already-injected htmlToFigmaSync via func and get result
+      // Step 2: call __htmlToFigmaSync and return JSON
       let results: chrome.scripting.InjectionResult[];
       try {
         results = await chrome.scripting.executeScript({
           target: { tabId },
           func: () => {
-            // @ts-ignore — htmlToFigmaSync was injected by inject.js
-            const layers = (window as any).__htmlToFigmaSync(
-              "body",
-              location.hash.includes("useFrames=true")
-            );
+            const fn = (window as any).__htmlToFigmaSync;
+            if (!fn) return null;
+            const layers = fn("body", location.hash.includes("useFrames=true"));
             return JSON.stringify({ layers });
           },
         });
+        console.log("[bg] layers collected, raw length:", results?.[0]?.result?.length);
       } catch (e) {
+        console.error("[bg] collect layers failed:", e);
         sendResponse({ done: false, error: String(e) });
         return;
       }
 
-      const raw = results?.[0]?.result as string | undefined;
+      const raw = results?.[0]?.result as string | null | undefined;
       if (!raw) {
-        sendResponse({ done: true });
+        console.error("[bg] no layers returned from inject");
+        sendResponse({ done: false, error: "no layers" });
         return;
       }
 
@@ -69,17 +81,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         for (const child of layer.children ?? []) collectUrls(child);
       }
       for (const layer of parsed.layers) collectUrls(layer);
+      console.log("[bg] image URLs to fetch:", urlSet.size, Array.from(urlSet));
 
-      // Step 4: fetch bytes in background (no CORS, host_permissions = <all_urls>)
+      // Step 4: fetch bytes in background (host_permissions = <all_urls>)
       const urlToBytes = new Map<string, number[]>();
       await Promise.all(
         Array.from(urlSet).map(async (url) => {
           try {
             const res = await fetch(url);
-            if (!res.ok) return;
+            if (!res.ok) {
+              console.warn("[bg] fetch failed:", url, res.status);
+              return;
+            }
             urlToBytes.set(url, Array.from(new Uint8Array(await res.arrayBuffer())));
-          } catch {
-            // skip failed images
+            console.log("[bg] fetched:", url, "bytes:", urlToBytes.get(url)!.length);
+          } catch (e) {
+            console.warn("[bg] fetch error:", url, e);
           }
         })
       );
@@ -98,6 +115,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       // Step 6: trigger download in tab
       const json = JSON.stringify(parsed);
+      console.log("[bg] triggering download, JSON size:", json.length);
       await chrome.scripting.executeScript({
         target: { tabId },
         func: (jsonStr: string) => {

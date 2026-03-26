@@ -159,6 +159,24 @@ figma.showUI(__html__, {
   width: settings.ui.baseWidth,
   height: settings.ui.baseHeight,
 });
+
+/**
+ * Resolve imageData (number[]) from chrome extension into a Figma imageHash.
+ * Mutates fill in-place: adds imageHash, removes imageData and url.
+ */
+async function resolveImageData(fill: any): Promise<void> {
+  if (!fill?.imageData) return;
+  try {
+    const bytes = new Uint8Array(fill.imageData as number[]);
+    const image = figma.createImage(bytes);
+    fill.imageHash = image.hash;
+  } catch (err) {
+    console.warn("[html-to-figma] Could not create image from imageData", fill, err);
+  }
+  delete fill.imageData;
+  delete fill.url;
+}
+
 async function processImages(layer: RectangleNode | TextNode) {
   const images = getImageFills(layer);
   return (
@@ -556,6 +574,12 @@ figma.ui.onmessage = async (msg) => {
             const rect = figma.createRectangle();
             const imageFills = getImageFills(layer);
             if (imageFills) {
+              // Resolve imageData from chrome extension (embedded bytes)
+              for (const fill of imageFills) {
+                if ((fill as any).imageData) {
+                  await resolveImageData(fill);
+                }
+              }
               await processImages(layer);
               if (imageFills.length && msg.blurImages) {
                 (layer as RectangleNode).effects = [

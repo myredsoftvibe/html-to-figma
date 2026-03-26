@@ -159,15 +159,23 @@ figma.showUI(__html__, {
   width: settings.ui.baseWidth,
   height: settings.ui.baseHeight,
 });
+
 async function processImages(layer: RectangleNode | TextNode) {
   const images = getImageFills(layer);
   return (
     images &&
     Promise.all(
       images.map(async (image: any) => {
-        if (image?.intArr) {
-          image.imageHash = await figma.createImage(image.intArr).hash;
+        // `intArr` — legacy path (existing code)
+        // `imageData` — new path: bytes embedded by the chrome extension
+        const bytes: Uint8Array | undefined =
+          image?.intArr ?? image?.imageData;
+
+        if (bytes) {
+          image.imageHash = figma.createImage(new Uint8Array(bytes)).hash;
           delete image.intArr;
+          delete image.imageData;
+          delete image.url; // clean up the source URL kept for debugging
         }
       })
     )

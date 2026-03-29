@@ -4,28 +4,24 @@
     margin: 0;
     padding: 0;
   }
+
+  .loader {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #1A73E8;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 100px auto;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 </style>
-<!-- TODO CHANGE LOADING ICON -->
+
 <div id="react-page">
   <div style="display: flex; flex-direction: column; align-items: stretch">
-    <img
-      style="margin: 100px auto; width: 30px; height: 30px"
-      src="https://cdn.builder.io/api/v1/image/assets%2FYJIGb4i01jvw0SRdL5Bt%2F0ea05b817e7040c39ec81987611542d7"
-    />
+    <div class="loader"></div>
   </div>
 </div>
-
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<!-- <script
-  async
-  src="https://www.googletagmanager.com/gtag/js?id=G-W8MM88D2K8"
-></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {
-    dataLayer.push(arguments);
-  }
-  gtag("js", new Date());
-
-  gtag("config", "G-W8MM88D2K8");
-</script> -->

@@ -556,6 +556,7 @@ class App extends SafeComponent {
                               cursor: "pointer",
                               textDecoration: "none",
                             }}
+                            // TODO CHANGE
                             href="https://chrome.google.com/webstore/detail/efjcmgblfpkhbjpkpopkgeomfkokpaim"
                             target="_blank"
                           >

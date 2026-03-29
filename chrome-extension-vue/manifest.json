@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "HTML to Figma",
+  "name": "HTML To Figma",
   "version": "1.0.0",
-  "description": "Capture any page and import it into Figma",
+  "description": "Fast HTML To Figma extension. Capture any website and convert html to design directly in chrome. Instantly move web to figma frames.",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],
   "background": {

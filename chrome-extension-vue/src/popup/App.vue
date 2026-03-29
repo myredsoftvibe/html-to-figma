@@ -49,11 +49,11 @@ async function capture() {
       Capture page
     </button>
 
-    <footer>
-      <a href="https://github.com/BuilderIO/html-to-figma/issues" target="_blank">Feedback</a>
+    <!-- <footer>
+      <a href="link" target="_blank">Feedback</a>
       <span class="divider" />
-      <a href="https://github.com/BuilderIO/html-to-figma" target="_blank">Source</a>
-    </footer>
+      <a href="link" target="_blank">Source</a>
+    </footer> -->
   </div>
 </template>
 

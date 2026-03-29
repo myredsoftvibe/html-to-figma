@@ -43,4 +43,4 @@ npm run build
 ## Notes
 
 - The `lib/` folder inside this extension is a copy of the root `lib/` directory
-- Do not import from `@builder.io/html-to-figma` npm package — use local `lib/` only
+- Do not import from external npm package — use local `lib/` only

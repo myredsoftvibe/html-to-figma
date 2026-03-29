@@ -182,7 +182,7 @@ export async function processImages(layer: Node) {
 
         // const isSvg = url.endsWith(".svg");
 
-        // // Proxy returned content through Builder so we can access cross origin for
+        // // Proxy returned content so we can access cross origin for
         // // pulling in photos, etc
         // const res = await fetch(
         //   `${apiHost}/api/v1/proxy-api?url=${encodeURIComponent(url)}`
@@ -717,7 +717,7 @@ class App extends SafeComponent {
                 {/* {" "} */}
                 {/* <a
                   style={{ color: "inherit" }}
-                  href="https://github.com/BuilderIO/html-to-figma/issues"
+                  href="link/issues"
                   target="_blank"
                 >
                   report it
@@ -744,7 +744,7 @@ class App extends SafeComponent {
                   opacity: 0.7,
                   textDecoration: "none",
                 }}
-                href="https://github.com/BuilderIO/html-to-figma/issues"
+                href="link/issues"
                 target="_blank"
               >
                 <FormattedMessage
@@ -759,7 +759,7 @@ class App extends SafeComponent {
                   textDecoration: "none",
                   marginLeft: 5,
                 }}
-                href="https://github.com/BuilderIO/html-to-figma"
+                href="link/html-to-figma"
                 target="_blank"
               >
                 <FormattedMessage id="source" defaultMessage="Source" />
@@ -771,7 +771,7 @@ class App extends SafeComponent {
                   textDecoration: "none",
                   marginLeft: 5,
                 }}
-                href="https://github.com/BuilderIO/html-to-figma"
+                href="link/html-to-figma"
                 target="_blank"
               >
                 <FormattedMessage id="help" defaultMessage="Help" />

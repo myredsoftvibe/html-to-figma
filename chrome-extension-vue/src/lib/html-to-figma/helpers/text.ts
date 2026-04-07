@@ -3,6 +3,24 @@ import { isHidden } from "./nodes";
 import { fastClone } from "./object";
 import { parseUnits, getRgb } from "./parsers";
 
+/**
+ * Returns true when a text node lives alongside other nodes (elements or
+ * non-empty text) inside its parent — i.e. "mixed content" like:
+ *   <li><strong>Bold</strong> rest of text</li>
+ * In that case building a separate TEXT layer per fragment causes overlaps
+ * in Figma, so we skip such nodes entirely.
+ */
+function hasSiblings(node: Node): boolean {
+  const parent = node.parentElement;
+  if (!parent) return false;
+  for (const child of Array.from(parent.childNodes)) {
+    if (child === node) continue;
+    if (child.nodeType === Node.ELEMENT_NODE) return true;
+    if (child.nodeType === Node.TEXT_NODE && child.textContent?.trim()) return true;
+  }
+  return false;
+}
+
 export const buildTextNode = ({
   node,
 }: {
@@ -19,12 +37,27 @@ export const buildTextNode = ({
     if (isHidden(parent)) {
       return undefined;
     }
+
+    // Skip text fragments that are part of mixed content (e.g.
+    // <li><strong>x</strong> y</li>). Each fragment would get its own
+    // overlapping TEXT layer. The visual area is already covered by the
+    // parent RECTANGLE from generateElements.
+    if (hasSiblings(node)) {
+      return undefined;
+    }
+
     const computedStyles = getComputedStyle(parent);
     const range = document.createRange();
     range.selectNode(node);
     const rect = fastClone(range.getBoundingClientRect());
     const lineHeight = parseUnits(computedStyles.lineHeight);
     range.detach();
+
+    // getBoundingClientRect() returns viewport-relative coords.
+    // Add scroll offset so text node positions are page-relative.
+    rect.top += window.scrollY;
+    rect.left += window.scrollX;
+
     if (lineHeight && rect.height < lineHeight.value) {
       const delta = lineHeight.value - rect.height;
       rect.top -= delta / 2;
@@ -92,7 +125,6 @@ export const buildTextNode = ({
       textNode.fontSize = Math.round(fontSize.value);
     }
     if (computedStyles.fontFamily) {
-      // const font = computedStyles.fontFamily.split(/\s*,\s*/);
       (textNode as any).fontFamily = computedStyles.fontFamily;
     }
 
